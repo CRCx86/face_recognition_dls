@@ -345,7 +345,7 @@ def train_model(model, train_loader, val_loader, arcface_loss, triplet_loss, num
     )
 
     # История обучения
-    history = {'train_loss': [], 'val_loss': [], 'val_acc': [], 'train_acc': []}
+    history = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
 
     for epoch in range(num_epochs):
         print(f"\n{'='*50}")
@@ -419,9 +419,9 @@ def train_model(model, train_loader, val_loader, arcface_loss, triplet_loss, num
 
         # Сохраняем историю
         history['train_loss'].append(avg_train_loss)
-        history['train_triplet_acc'].append(avg_train_triplet_acc)
+        history['train_acc'].append(avg_train_triplet_acc)
         history['val_loss'].append(val_loss)
-        history['val_triplet_acc'].append(val_triplet_acc)
+        history['val_acc'].append(val_triplet_acc)
 
         # Вывод статистики
         print(
