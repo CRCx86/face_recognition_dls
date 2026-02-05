@@ -1,18 +1,12 @@
 import torch.nn as nn
-import torch.nn.functional as F
+from tqdm import tqdm  # индикатор прогресса
 
 import torch
 import torch.optim as optim
 
-from face_recognition.dataset import CelebAHeatmapDataset
+from face_recognition.heatmap_dataset import CelebAHeatmapDataset
 
-
-dataset = CelebAHeatmapDataset(
-    "E:\\Deep Learning School\\FR\\result\\cropped"
-)
-loader = torch.utils.data.DataLoader(
-    dataset, batch_size=64, shuffle=True, num_workers=4
-)
+from torch.utils.data import DataLoader, random_split
 
 
 class ResidualBlock(nn.Module):
@@ -132,17 +126,23 @@ class StackedHourglass(nn.Module):
         return outputs
 
 
-def run_train(model, epochs):
+def run_train(model, train_loader, val_loader, epochs):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=5, verbose=True
+    )
+
+    best_val_loss = float('inf')
+
     for epoch in range(epochs):
         model.train()
-        total_loss = 0
+        train_loss = 0
 
-        for imgs, hms in loader:
-            imgs = imgs.cuda()
-            hms = hms.cuda()
+        for batch_idx, batch in enumerate(tqdm(train_loader)):
+            imgs = batch["img"].cuda()
+            hms = batch["heatmaps"].cuda()
 
             predications = model(imgs)
             loss = sum(criterion(p, hms) for p in predications)
@@ -151,8 +151,106 @@ def run_train(model, epochs):
             loss.backward()
             optimizer.step()
 
-            total_loss += loss.item()
+            train_loss += loss.item()
 
-        print(f"Epoch {epoch}: loss={total_loss/len(loader):.4f}")
+            if batch_idx % 100 == 0:
+                print(f"Epoch {epoch}, Batch {batch_idx}: Loss = {loss.item():.6f}")
 
-    torch.save(model.state_dict(), "hourglass_landmarks.pth")
+        avg_train_loss = train_loss / len(train_loader)
+
+        # Validation phase
+        model.eval()
+        val_loss = 0
+
+        with torch.no_grad():
+            for batch in val_loader:
+                imgs = batch["img"].cuda()
+                hms = batch["heatmaps"].cuda()
+
+                predictions = model(imgs)
+                loss = sum(criterion(p, hms) for p in predictions)
+                val_loss += loss.item()
+
+            avg_val_loss = val_loss / len(val_loader)
+
+            # Update learning rate based on validation loss
+            scheduler.step(avg_val_loss)
+
+            print(f"Epoch {epoch}: Train Loss = {avg_train_loss:.6f}, Val Loss = {avg_val_loss:.6f}")
+
+            # Save best model
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                torch.save(model.state_dict(), "models/hourglass/hourglass_landmarks_best.pth")
+                print(f"Saved best model with val loss: {best_val_loss:.6f}")
+
+    torch.save(model.state_dict(), "models/hourglass/hourglass_landmarks.pth")
+    print(f"Training completed. Best validation loss: {best_val_loss:.6f}")
+
+
+def evaluate_model(model, test_loader):
+    """Evaluate model on test set"""
+    criterion = nn.MSELoss()
+
+    model.eval()
+    test_loss = 0
+
+    with torch.no_grad():
+        for batch in test_loader:
+            imgs = batch["img"].cuda()
+            hms = batch["heatmaps"].cuda()
+
+            predictions = model(imgs)
+            # Use only the final prediction for evaluation
+            loss = criterion(predictions[-1], hms)
+            test_loss += loss.item()
+
+    avg_test_loss = test_loss / len(test_loader)
+    print(f"Test Loss: {avg_test_loss:.6f}")
+    return avg_test_loss
+
+
+if __name__ == "__main__":
+    model = StackedHourglass().cuda()
+
+    dataset = CelebAHeatmapDataset(
+        "E:\\Deep Learning School\\FR\\result\\cropped"
+    )
+
+    # Split dataset: 70% train, 15% validation, 15% test
+    total_size = len(dataset)
+    train_size = int(0.7 * total_size)
+    val_size = int(0.15 * total_size)
+    test_size = total_size - train_size - val_size
+
+    train_dataset, val_dataset, test_dataset = random_split(
+        dataset, [train_size, val_size, test_size]
+    )
+
+    # Create data loaders
+    train_loader = DataLoader(
+        train_dataset, batch_size=64, shuffle=True, num_workers=4
+    )
+
+    val_loader = DataLoader(
+        val_dataset, batch_size=64, shuffle=False, num_workers=4
+    )
+
+    test_loader = DataLoader(
+        test_dataset, batch_size=64, shuffle=False, num_workers=4
+    )
+
+    print(f"Dataset sizes: Train={train_size}, Val={val_size}, Test={test_size}")
+
+    # Initialize model
+    model = StackedHourglass().cuda()
+
+    # Train model
+    epochs = 25
+    run_train(model, train_loader, val_loader, epochs)
+
+    # Evaluate on test set
+    print("\nEvaluating on test set...")
+    test_loss = evaluate_model(model, test_loader)
+    # run_test(model)
+    # run_tests(model)

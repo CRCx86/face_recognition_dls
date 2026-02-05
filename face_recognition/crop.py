@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 
 # Пути
 base_dir = Path("E:\\Deep Learning School\\FR\\celeba-original-wild-images")
-selected_file = Path("E:\\Deep Learning School\\FR\\result\\selected_images\\selected_files_10k.txt")
+# selected_file = Path("E:\\Deep Learning School\\FR\\result\\selected_images\\selected_files_10k.txt")
+selected_file = Path("E:\\Deep Learning School\\FR\\result\\selected_images\\selected_files_balanced.txt")
 
 out_dir = Path("E:\\Deep Learning School\\FR\\result\\cropped")
 out_dir.mkdir(parents=True, exist_ok=True)
@@ -79,6 +80,8 @@ def check_lm(image_id):
     plt.show()
 
 if __name__ == "__main__":
-    img_id = "002832.jpg"
+    crop_img()
 
-    check_lm(img_id)
+    # img_id = "002832.jpg"
+    #
+    # check_lm(img_id)

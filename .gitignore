@@ -1,2 +1,4 @@
 .idea
 .venv
+face_recognition/models
+face_recognition/debug_results

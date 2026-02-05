@@ -1,5 +1,5 @@
 import torch
-from face_recognition.dataset import CelebAHeatmapDataset
+from face_recognition.heatmap_dataset import CelebAHeatmapDataset
 
 dataset = CelebAHeatmapDataset(
     "E:\\Deep Learning School\\FR\\result\\cropped"
@@ -33,7 +33,7 @@ def mean_pixel_error(pred_hm, gt_hm):
 
 
 def run_test(model):
-    model.load_state_dict(torch.load("hourglass_landmarks.pth"))
+    model.load_state_dict(torch.load("models/hourglass/hourglass_landmarks.pth"))
     model.eval()
 
     img, gt_hm = dataset[0]
@@ -48,7 +48,7 @@ def run_test(model):
 
 
 def run_tests(model):
-    model.load_state_dict(torch.load("hourglass_landmarks.pth"))
+    model.load_state_dict(torch.load("models/hourglass/hourglass_landmarks.pth"))
 
     model.eval()
     errors = []
