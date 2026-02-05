@@ -363,6 +363,7 @@ def train_model(model, train_loader, val_loader, arcface_loss, triplet_loss, num
             anchor = anchor.to(device)
             positive = positive.to(device)
             negative = negative.to(device)
+            labels = labels.to(device)
 
             optimizer.zero_grad()
 
@@ -497,6 +498,10 @@ if __name__ == "__main__":
         distance_function=lambda x, y: 1 - F.cosine_similarity(x, y),
         margin=0.2
     ).to(device)
+    # triplet_criterion = nn.TripletMarginLoss(
+    #     margin=0.2,
+    #     p=2
+    # )
 
     # Быстрая проверка
     print("Быстрая проверка accuracy на валидации:")
