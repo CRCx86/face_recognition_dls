@@ -217,7 +217,7 @@ if __name__ == "__main__":
         "E:\\Deep Learning School\\FR\\result\\cropped"
     )
 
-    # Split dataset: 70% train, 15% validation, 15% test
+    # Уже резделенный датасет: 70% train, 15% val, 15% test
     total_size = len(dataset)
     train_size = int(0.7 * total_size)
     val_size = int(0.15 * total_size)
@@ -227,7 +227,7 @@ if __name__ == "__main__":
         dataset, [train_size, val_size, test_size]
     )
 
-    # Create data loaders
+    # даталоадеры
     train_loader = DataLoader(
         train_dataset, batch_size=64, shuffle=True, num_workers=4
     )
@@ -242,15 +242,15 @@ if __name__ == "__main__":
 
     print(f"Dataset sizes: Train={train_size}, Val={val_size}, Test={test_size}")
 
-    # Initialize model
     model = StackedHourglass().cuda()
 
-    # Train model
+    # Тренировка
     epochs = 25
     run_train(model, train_loader, val_loader, epochs)
 
-    # Evaluate on test set
+    # Проверка
     print("\nEvaluating on test set...")
     test_loss = evaluate_model(model, test_loader)
+
     # run_test(model)
     # run_tests(model)

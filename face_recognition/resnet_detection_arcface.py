@@ -31,7 +31,7 @@ class FaceDatasetWithCSV(Dataset):
         """
         Args:
             image_dir (string): Папка с фотографиями
-            csv_file (string): Путь к CSV файлу с метками (опционально)
+            csv_file (string): Путь к CSV файлу с идентификаторами (обязательно)
             transform (callable, optional): Трансформации
         """
         self.image_dir = image_dir
@@ -180,7 +180,7 @@ class FaceModel(nn.Module):
         # Берем предобученный ResNet
         self.backbone = models.resnet34(weights='IMAGENET1K_V1')
 
-        # Замораживаем первые слои (опционально)
+        # Замораживаем первые слои
         for param in self.backbone.parameters():
             param.requires_grad = True  # Размораживаем все для тонкой настройки
 
@@ -209,7 +209,7 @@ def test_model(model, dataloader, criterion, device='cuda'):
     correct = 0
     total = 0
 
-    with torch.no_grad():  # Отключаем вычисление градиентов для ускорения
+    with torch.no_grad():
         for images, labels in tqdm(dataloader, desc="Testing", leave=False):
             # Переносим данные на устройство (GPU/CPU)
             images = images.to(device)
@@ -400,7 +400,6 @@ if __name__ == "__main__":
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    # Вариант 1: С CSV файлом
     train_dataset = FaceDatasetWithCSV(image_dir=train_dir, csv_file=label_file, transform=train_transform, split='train')
     train_loader = DataLoader(train_dataset, batch_size=96, shuffle=True, num_workers=4, pin_memory=True)
 

@@ -31,7 +31,7 @@ class FaceDatasetWithCSV(Dataset):
         """
         Args:
             image_dir (string): Папка с фотографиями
-            csv_file (string): Путь к CSV файлу с метками (опционально)
+            csv_file (string): Путь к CSV файлу с идентификаторами (обязательно)
             transform (callable, optional): Трансформации
         """
         self.image_dir = image_dir
@@ -498,6 +498,7 @@ if __name__ == "__main__":
         distance_function=lambda x, y: 1 - F.cosine_similarity(x, y),
         margin=0.2
     ).to(device)
+    # Эта штука работает так же как и выше
     # triplet_criterion = nn.TripletMarginLoss(
     #     margin=0.2,
     #     p=2
@@ -520,7 +521,7 @@ if __name__ == "__main__":
         lr=0.001
     )
 
-    test_dataset = FaceDatasetWithCSV(image_dir=test_dir, csv_file=label_file, transform=val_transform, split='test')
+    test_dataset = TripletFaceDataset(image_dir=test_dir, csv_file=label_file, transform=val_transform, split='test')
     test_loader = DataLoader(test_dataset, batch_size=96, shuffle=False)
 
     final_acc = test_model(trained_model, test_loader)

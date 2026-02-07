@@ -31,7 +31,7 @@ class FaceDatasetWithCSV(Dataset):
         """
         Args:
             image_dir (string): Папка с фотографиями
-            csv_file (string): Путь к CSV файлу с метками (опционально)
+            csv_file (string): Путь к CSV файлу с идентификаторами (обязательно)
             transform (callable, optional): Трансформации
         """
         self.image_dir = image_dir
@@ -138,9 +138,9 @@ class FaceModel(nn.Module):
         # Берем предобученный ResNet
         self.backbone = models.resnet34(weights='IMAGENET1K_V1')
 
-        # Замораживаем первые слои (опционально)
+        # Замораживаем первые слои
         for param in self.backbone.parameters():
-            param.requires_grad = True  # Размораживаем все для тонкой настройки
+            param.requires_grad = True
 
         # Заменяем последний слой
         in_features = self.backbone.fc.in_features
@@ -381,23 +381,18 @@ if __name__ == "__main__":
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    # Вариант 1: С CSV файлом
     train_dataset = TripletFaceDataset(image_dir=train_dir, csv_file=label_file, transform=train_transform, split='train')
     train_loader = DataLoader(train_dataset, batch_size=96, shuffle=True, num_workers=4, pin_memory=True)
 
     val_dataset = TripletFaceDataset(image_dir=val_dir, csv_file=label_file, transform=val_transform, split='val')
     val_loader = DataLoader(val_dataset, batch_size=96, shuffle=False, num_workers=4, pin_memory=True)
 
-    # 1. Загружаем предобученную на ImageNet модель
+    # Загружаем предобученную на ImageNet модель
     model = FaceModel(embedding_dim=256)  # предобученная
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
     print(f"Using device: {device}")
-
-    # 2. Узнаем сколько у вас уникальных людей
-    num_classes = train_dataset.num_classes
-    print(f"\n✅ Количество классов (уникальных людей): {num_classes}")
 
     # Loss функция и оптимизатор
     criterion = nn.TripletMarginWithDistanceLoss(
@@ -421,7 +416,7 @@ if __name__ == "__main__":
         lr=0.0005
     )
 
-    test_dataset = FaceDatasetWithCSV(image_dir=test_dir, csv_file=label_file, transform=val_transform, split='test')
+    test_dataset = TripletFaceDataset(image_dir=test_dir, csv_file=label_file, transform=val_transform, split='test')
     test_loader = DataLoader(test_dataset, batch_size=96, shuffle=False)
 
     final_acc = test_model(trained_model, test_loader)

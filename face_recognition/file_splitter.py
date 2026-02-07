@@ -75,12 +75,12 @@ def split_by_images_per_person(image_dir, identity_file, output_dir,
 
 def get_detailed_image_statistics(image_dir, identity_file):
     """
-    Получает детальную статистику по вашим 10000 фото
+    Получает детальную статистику по всем 10000 фото
     """
     # Словарь для хранения: ID человека -> список его фото
     person_to_images = defaultdict(list)
 
-    # Сначала читаем все файлы из папки
+    # Читаем все файлы из папки
     image_files = []
     for file in os.listdir(image_dir):
         if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
@@ -132,15 +132,15 @@ if __name__ == "__main__":
     OUTPUT_DIR = "E:\\Deep Learning School\\FR\\celeb_split"  # Папка для результатов
 
 
-    # Вариант 1: Разделение изображений каждого человека
+    # Разделение изображений каждого человека
     print("\n" + "="*50 + "\n")
-    print("Вариант 1: Разделение изображений каждого человека")
+    print("Разделение изображений каждого человека")
     split_by_images_per_person(
         image_dir=IMAGE_DIR,
         identity_file=IDENTITY_FILE,
         output_dir=OUTPUT_DIR + "_per_person",
-        train_per_person=22,  # 14 из 20 в train
-        val_per_person=4      # 3 в val, 3 в test
+        train_per_person=22,  # 22 из 28-29 в train
+        val_per_person=4      # 4 в val, остальное в test
     )
 
     # Использование

@@ -28,7 +28,7 @@ class FaceDatasetWithCSV(Dataset):
         """
         Args:
             image_dir (string): Папка с фотографиями
-            csv_file (string): Путь к CSV файлу с метками (опционально)
+            csv_file (string): Путь к CSV файлу с идентификаторами (обязательно)
             transform (callable, optional): Трансформации
         """
         self.image_dir = image_dir
@@ -104,7 +104,7 @@ class FaceModel(nn.Module):
         # Берем предобученный ResNet
         self.backbone = models.resnet34(weights='IMAGENET1K_V1')
 
-        # Замораживаем первые слои (опционально)
+        # Замораживаем первые слои
         for param in self.backbone.parameters():
             param.requires_grad = True  # Размораживаем все для тонкой настройки
 
@@ -126,13 +126,12 @@ class FaceModel(nn.Module):
 # ==================== 2. ФУНКЦИИ ДЛЯ ОЦЕНКИ ====================
 def test_model(model, dataloader, device='cuda'):
     """Вычисляет accuracy модели на данных из dataloader"""
-    model.eval()  # Переводим модель в режим оценки
+    model.eval()
     correct = 0
     total = 0
 
-    with torch.no_grad():  # Отключаем вычисление градиентов для ускорения
+    with torch.no_grad():
         for images, labels in tqdm(dataloader, desc="Testing", leave=False):
-            # Переносим данные на устройство (GPU/CPU)
             images = images.to(device)
             labels = labels.to(device)
 
@@ -148,6 +147,7 @@ def test_model(model, dataloader, device='cuda'):
 
     accuracy = correct / total
     model.train()  # Возвращаем модель в режим обучения
+
     return accuracy
 
 
@@ -242,7 +242,6 @@ def train_model(model, train_loader, val_loader, num_epochs=10, lr=0.001):
             loss = criterion(outputs, labels)
 
             # Обратный проход
-
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()

@@ -28,19 +28,19 @@ class CelebAHeatmapDataset(Dataset):
         img_orig = cv2.cvtColor(img_orig, cv2.COLOR_BGR2RGB)
         h, w = img_orig.shape[:2]
 
-        landmarks = np.load(lm_path).astype(np.float32)  # original coords
+        landmarks = np.load(lm_path).astype(np.float32)  # оригинальные координаты
 
-        # resize image
+        # ресайз
         img_resized = cv2.resize(img_orig, (self.img_size, self.img_size))
 
-        # original → img_size
+        # оригинал в img_size
         sx = self.img_size / w
         sy = self.img_size / h
         landmarks_img = landmarks.copy()
         landmarks_img[:, 0] *= sx
         landmarks_img[:, 1] *= sy
 
-        # img_size → hm_size
+        # оригинал в hm_size
         hm_scale = self.hm_size / self.img_size
 
         heatmaps = np.zeros((landmarks.shape[0], self.hm_size, self.hm_size), dtype=np.float32)
